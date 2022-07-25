@@ -10,10 +10,6 @@ interface SystemInfo {
 
 async function getSystemInfo() {
   return new Promise<SystemInfo>(async (resolve, reject) => {
-    const result = {
-      cpu: 0,
-      mem: 0
-    }
     const cpuData = await cpu.usage()
     const memInfo = await mem.info()
     const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
