@@ -7,16 +7,21 @@
     "postinstall": "patch-package",
     "tsc": "tsc",
     "dev": "npm run tsc && npm run start",
-    "start": "node out/index.js"
+    "start": "node out/index.js start",
+    "stop": "node out/index.js stop"
+  },
+  "bin": {
+    "mc": "./out/index.js"
   },
   "author": "zane.zyz",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.6.1",
     "@types/node-os-utils": "^1.3.0",
-    "patch-package": "^6.4.7"
-  },
-  "dependencies": {
-    "node-os-utils": "^1.3.7"
+    "chalk": "^4.0.1",
+    "commander": "^9.4.0",
+    "node-os-utils": "^1.3.7",
+    "patch-package": "^6.4.7",
+    "typescript": "^4.8.0-dev.20220726"
   }
 }

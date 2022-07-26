@@ -1,38 +1,25 @@
-import http from 'http';
-import osu from 'node-os-utils';
+import commander from 'commander'
 
-const { cpu, mem, netstat } = osu
+import { startServer, stopServer } from './server'
 
-interface SystemInfo {
-  cpuData: number
-  memData: number
-  netData: { inputMb: number, outputMb: number }
-}
+const program = commander.program
 
-async function getSystemInfo() {
-  return new Promise<SystemInfo>(async (resolve, reject) => {
-    const cpuData = await cpu.usage()
-    const memInfo = await mem.info()
-    const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
-    const netInfo = await netstat.inOut(1000)
-    const netData = typeof netInfo === 'string' ? { inputMb: 0, outputMb: 0 } : netInfo.total
+program
+  .name('monitor-cube')
+  .description('A monitor in cube, powered by yizhanzhang')
+  .version('1.0.0');
 
-    resolve({
-      cpuData,
-      memData,
-      netData
-    })
+program.command('start')
+  .description('start http server for monitor')
+  .option('-p, --port <number>', 'http port to use, default is 33333', '33333')
+  .action((options) => {
+    startServer(Number(options.port))
   })
-}
 
-http.createServer(function (request, response) {
-  const url = request.url
-  if (url?.indexOf('/info') === 0){
-    getSystemInfo().then(res => {
-      response.writeHead(200, {'Content-Type': 'text/plain'});
-      response.end(JSON.stringify(res));
-    })
-  } else {
-    response.end();
-  }
-}).listen(33333);
+program.command('stop')
+  .description('stop http server for monitor')
+  .action(() => {
+    stopServer()
+  })
+
+program.parse()
