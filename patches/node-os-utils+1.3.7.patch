@@ -1,0 +1,110 @@
+diff --git a/node_modules/node-os-utils/lib/netstat.js b/node_modules/node-os-utils/lib/netstat.js
+index 8efc5e8..624cd54 100644
+--- a/node_modules/node-os-utils/lib/netstat.js
++++ b/node_modules/node-os-utils/lib/netstat.js
+@@ -99,34 +99,54 @@ function ifconfigStats () {
+   })
+ }
+ 
++function isEthernetInterface(interface) {
++  return interface.indexOf('en') === 0
++}
++
+ bucket.netstat = {
+   stats: co.wrap(function * () {
+-    var out = yield exec('ip -s link')
+-
++    var isMac = process.platform === 'darwin'
++    const macShell = "netstat -ib | awk 'NR != 1 {printf \"{`%s`:`%s`,`%s`:`%s`,`%s`:`%s`},\", \"name\", $1, \"Ibytes\", $7, \"Obytes\", $10}'"
++    const linuxShell = 'ip -s link'
++    var out = yield exec(isMac ? macShell : linuxShell)
+     if(bucket.isNotSupported(out)) return ifconfigStats()
+ 
+-    var names = new RegExp(/[0-9]+: ([\S]+): /g)
+-    var RX = new RegExp(/^\s+RX:\s+bytes\s+packets\s+errors\s+dropped\s+(overrun|missed)\s+mcast\s*\n\s*([0-9]+)\s+/gm)
+-    var TX = new RegExp(/^\s+TX:\s+bytes\s+packets\s+errors\s+dropped\s+carrier\s+collsns\s*\n\s*([0-9]+)\s+/gm)
+-
+     var stats = []
+-    var i = 0
+-    var res = []
+-
+-    while ((res = names.exec(out)) !== null) {
+-      stats[i++] = {
+-        interface: res[1]
++    if (isMac) {
++      const outObj = JSON.parse('[' + out.replaceAll('`', '"').replace(/,$/, '') + ']')
++      stats = outObj.map(function(item, index) {
++        if (index < outObj.length - 1 && item.name === outObj[index + 1].name) {
++          return undefined
++        }
++        return {
++          interface: item.name,
++          inputBytes: item.Ibytes,
++          outputBytes: item.Obytes
++        }
++      }).filter(item => !!item)
++    } else {
++      var names = new RegExp(/[0-9]+: ([\S]+): /g)
++      var RX = new RegExp(/^\s+RX:\s+bytes\s+packets\s+errors\s+dropped\s+(overrun|missed)\s+mcast\s*\n\s*([0-9]+)\s+/gm)
++      var TX = new RegExp(/^\s+TX:\s+bytes\s+packets\s+errors\s+dropped\s+carrier\s+collsns\s*\n\s*([0-9]+)\s+/gm)
++
++      var i = 0
++      var res = []
++
++      while ((res = names.exec(out)) !== null) {
++        stats[i++] = {
++          interface: res[1]
++        }
+       }
+-    }
+ 
+-    i = 0
+-    while ((res = RX.exec(out)) !== null) {
+-      stats[i++].inputBytes = res[2]
+-    }
++      i = 0
++      while ((res = RX.exec(out)) !== null) {
++        stats[i++].inputBytes = res[2]
++      }
+ 
+-    i = 0
+-    while ((res = TX.exec(out)) !== null) {
+-      stats[i++].outputBytes = res[1]
++      i = 0
++      while ((res = TX.exec(out)) !== null) {
++        stats[i++].outputBytes = res[1]
++      }
+     }
+ 
+     return stats
+@@ -160,13 +180,13 @@ bucket.netstat = {
+       var nbProblems = 0
+ 
+       for (var i = 0; i < oldStats.length; i++) {
+-        if (oldStats[i].interface !== 'lo' && oldStats[i].interface !== 'lo0' && oldStats[i].inputBytes > 0 && oldStats[i].outputBytes > 0) {
++        if (isEthernetInterface(oldStats[i].interface) && oldStats[i].inputBytes > 0 && oldStats[i].outputBytes > 0) {
+           metrics[oldStats[i].interface] = {}
+-          metrics[oldStats[i].interface]['inputMb'] = parseFloat(((newStats[i].inputBytes - oldStats[i].inputBytes) / 1000000).toFixed(2))
+-          metrics[oldStats[i].interface]['outputMb'] = parseFloat(((newStats[i].outputBytes - oldStats[i].outputBytes) / 1000000).toFixed(2))
++          metrics[oldStats[i].interface]['inputMb'] = (newStats[i].inputBytes - oldStats[i].inputBytes) / 1024 / 1024
++          metrics[oldStats[i].interface]['outputMb'] = (newStats[i].outputBytes - oldStats[i].outputBytes) / 1024 / 1024
+ 
+-          metrics.total['inputMb'] += parseFloat(metrics[oldStats[i].interface]['inputMb'])
+-          metrics.total['outputMb'] += parseFloat(metrics[oldStats[i].interface]['outputMb'])
++          metrics.total['inputMb'] += metrics[oldStats[i].interface]['inputMb']
++          metrics.total['outputMb'] += metrics[oldStats[i].interface]['outputMb']
+         } else {
+           nbProblems++
+         }
+@@ -176,6 +196,11 @@ bucket.netstat = {
+         return Promise.resolve(bucket.options.NOT_SUPPORTED_VALUE)
+       }
+ 
++      for (const key in metrics) {
++        metrics[key].inputMb = parseFloat(metrics[key].inputMb.toFixed(2))
++        metrics[key].outputMb = parseFloat(metrics[key].outputMb.toFixed(2))
++      }
++
+       return Promise.resolve(metrics)
+     })
+   }
