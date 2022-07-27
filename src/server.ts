@@ -110,7 +110,7 @@ export async function startServer () {
   }
   const port = await getFreePort()
   if (!port) return
-  greenLog(`local ip: [${IP.join(' | ')}]`)
+  greenLog(`local ip: ${IP.join(' | ')}`)
   greenLog(`start server PORT:${port} PID:${process.pid}`)
   http.createServer(function (request, response) {
     const url = request.url

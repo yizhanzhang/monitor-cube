@@ -114,7 +114,7 @@ function startServer() {
         const port = yield getFreePort();
         if (!port)
             return;
-        greenLog(`local ip: ${IP.join('|')}`);
+        greenLog(`local ip: ${IP.join(' | ')}`);
         greenLog(`start server PORT:${port} PID:${process.pid}`);
         http_1.default.createServer(function (request, response) {
             const url = request.url;
@@ -152,7 +152,7 @@ function showServer() {
             return;
         }
         const IP = getLocalIP();
-        blueLog(`local ip: ${IP.join('|')}`);
+        blueLog(`local ip: ${IP.join(' | ')}`);
         for (const p of pList) {
             blueLog(`available server PORT:${p.port} PID:${p.pid}`);
         }
