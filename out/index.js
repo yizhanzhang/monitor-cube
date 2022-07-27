@@ -10,15 +10,20 @@ program
     .name('monitor-cube')
     .description('A monitor in cube, powered by yizhanzhang')
     .version('1.0.0');
-program.command('start')
+program.command('monitor_cube_start')
     .description('start http server for monitor')
-    .option('-p, --port <number>', 'http port to use, default is 33333', '33333')
-    .action((options) => {
-    (0, server_1.startServer)(Number(options.port));
+    .option('-mc, --monitor_cube')
+    .action(() => {
+    (0, server_1.startServer)();
 });
-program.command('stop')
+program.command('monitor_cube_stop')
     .description('stop http server for monitor')
     .action(() => {
     (0, server_1.stopServer)();
+});
+program.command('monitor_cube_show')
+    .description('show available http server for monitor')
+    .action(() => {
+    (0, server_1.showServer)();
 });
 program.parse();

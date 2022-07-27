@@ -7,8 +7,9 @@
     "postinstall": "patch-package",
     "tsc": "tsc",
     "dev": "npm run tsc && npm run start",
-    "start": "node out/index.js start",
-    "stop": "node out/index.js stop"
+    "start": "node out/index.js monitor_cube_start &",
+    "show": "node out/index.js monitor_cube_show",
+    "stop": "node out/index.js monitor_cube_stop"
   },
   "bin": {
     "mc": "./out/index.js"
@@ -23,5 +24,8 @@
     "node-os-utils": "^1.3.7",
     "patch-package": "^6.4.7",
     "typescript": "^4.8.0-dev.20220726"
+  },
+  "dependencies": {
+    "find-free-port": "^2.0.0"
   }
 }

@@ -1,6 +1,6 @@
 import commander from 'commander'
 
-import { startServer, stopServer } from './server'
+import { showServer, startServer, stopServer } from './server'
 
 const program = commander.program
 
@@ -9,17 +9,23 @@ program
   .description('A monitor in cube, powered by yizhanzhang')
   .version('1.0.0');
 
-program.command('start')
+program.command('monitor_cube_start')
   .description('start http server for monitor')
-  .option('-p, --port <number>', 'http port to use, default is 33333', '33333')
-  .action((options) => {
-    startServer(Number(options.port))
+  .option('-mc, --monitor_cube')
+  .action(() => {
+    startServer()
   })
 
-program.command('stop')
+program.command('monitor_cube_stop')
   .description('stop http server for monitor')
   .action(() => {
     stopServer()
+  })
+
+program.command('monitor_cube_show')
+  .description('show available http server for monitor')
+  .action(() => {
+    showServer()
   })
 
 program.parse()
