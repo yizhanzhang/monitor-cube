@@ -2,6 +2,7 @@ import http from 'http'
 import chalk from 'chalk'
 import util from 'util'
 import cp from 'child_process'
+import { networkInterfaces } from 'os'
 import { cpu, mem, netstat } from 'node-os-utils'
 
 const fp = require("find-free-port")
@@ -54,6 +55,21 @@ function getFreePort() {
   })
 }
 
+function getLocalIP() {
+  const nets = networkInterfaces();
+  const address: string[] = [];
+  for (const name in nets) {
+    const netGroup = nets[name]
+    if (!netGroup || name.indexOf('en') !== 0) continue
+    netGroup.forEach(net => {
+      if (net.family === 'IPv4' && !net.internal) {
+        address.push(net.address);
+      }
+    })
+  }
+  return address[0]
+}
+
 async function getNodeProcess() {
   const { stdout, stderr } = await exec('ps aux | grep monitor_cube_start')
   if (stderr) {
@@ -86,14 +102,15 @@ async function getNodeProcess() {
 }
 
 export async function startServer () {
+  const IP = getLocalIP()
   const pList = await getNodeProcess()
   if (pList.length !== 0) {
-    blueLog(`has available server PID: ${pList[0].pid} PORT: ${pList[0].port}`)
+    blueLog(`has available server NET:[${IP}:${pList[0].pid}] PORT:${pList[0].port}`)
     return
   }
   const port = await getFreePort()
   if (!port) return
-  greenLog(`start server PID: ${process.pid} PORT: ${port}`)
+  greenLog(`start server NET:[${IP}:${process.pid}] PORT:${port}`)
   http.createServer(function (request, response) {
     const url = request.url
     if (url?.indexOf('/info') === 0){
@@ -123,7 +140,10 @@ export async function showServer () {
     redLog('no available server')
     return
   }
+  
+  const IP = getLocalIP()
+
   for (const p of pList) {
-    blueLog(`available server PORT: ${p.port} PID: ${p.pid}`)
+    blueLog(`available server NET:[${IP}:${p.port}] PID:${p.pid}`)
   }
 }
