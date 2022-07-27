@@ -7,7 +7,7 @@
     "postinstall": "patch-package",
     "tsc": "tsc",
     "dev": "npm run tsc && npm run start",
-    "start": "node out/index.js monitor_cube_start &",
+    "start": "node out/index.js monitor_cube_start",
     "show": "node out/index.js monitor_cube_show",
     "stop": "node out/index.js monitor_cube_stop"
   },

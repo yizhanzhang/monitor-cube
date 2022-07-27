@@ -110,7 +110,7 @@ export async function startServer () {
   }
   const port = await getFreePort()
   if (!port) return
-  greenLog(`start server NET:[${IP}:${process.pid}] PORT:${port}`)
+  greenLog(`start server NET:[${IP}:${port}] PID:${process.pid}`)
   http.createServer(function (request, response) {
     const url = request.url
     if (url?.indexOf('/info') === 0){
@@ -119,7 +119,8 @@ export async function startServer () {
         response.end(JSON.stringify(res));
       })
     } else {
-      response.end();
+      response.writeHead(200, {'Content-Type': 'text/plain'});
+      response.end('this is monitorCube');
     }
   }).listen(port);
 }

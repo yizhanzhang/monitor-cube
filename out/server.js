@@ -114,7 +114,7 @@ function startServer() {
         const port = yield getFreePort();
         if (!port)
             return;
-        greenLog(`start server NET:[${IP}:${process.pid}] PORT:${port}`);
+        greenLog(`start server NET:[${IP}:${port}] PID:${process.pid}`);
         http_1.default.createServer(function (request, response) {
             const url = request.url;
             if ((url === null || url === void 0 ? void 0 : url.indexOf('/info')) === 0) {
@@ -124,7 +124,8 @@ function startServer() {
                 });
             }
             else {
-                response.end();
+                response.writeHead(200, { 'Content-Type': 'text/plain' });
+                response.end('this is monitorCube');
             }
         }).listen(port);
     });
