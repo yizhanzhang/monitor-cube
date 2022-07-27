@@ -67,7 +67,7 @@ function getLocalIP() {
       }
     })
   }
-  return address[0]
+  return address
 }
 
 async function getNodeProcess() {
@@ -110,7 +110,8 @@ export async function startServer () {
   }
   const port = await getFreePort()
   if (!port) return
-  greenLog(`start server NET:[${IP}:${port}] PID:${process.pid}`)
+  greenLog(`local ip: [${IP.join(' | ')}]`)
+  greenLog(`start server PORT:${port} PID:${process.pid}`)
   http.createServer(function (request, response) {
     const url = request.url
     if (url?.indexOf('/info') === 0){
@@ -143,8 +144,8 @@ export async function showServer () {
   }
   
   const IP = getLocalIP()
-
+  blueLog(`local ip: ${IP.join(' | ')}`)
   for (const p of pList) {
-    blueLog(`available server NET:[${IP}:${p.port}] PID:${p.pid}`)
+    blueLog(`available server PORT:${p.port} PID:${p.pid}`)
   }
 }
