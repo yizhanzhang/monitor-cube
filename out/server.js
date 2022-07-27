@@ -17,6 +17,7 @@ const http_1 = __importDefault(require("http"));
 const chalk_1 = __importDefault(require("chalk"));
 const util_1 = __importDefault(require("util"));
 const child_process_1 = __importDefault(require("child_process"));
+const os_1 = require("os");
 const node_os_utils_1 = require("node-os-utils");
 const fp = require("find-free-port");
 const exec = util_1.default.promisify(child_process_1.default.exec);
@@ -56,6 +57,21 @@ function getFreePort() {
         });
     });
 }
+function getLocalIP() {
+    const nets = (0, os_1.networkInterfaces)();
+    const address = [];
+    for (const name in nets) {
+        const netGroup = nets[name];
+        if (!netGroup || name.indexOf('en') !== 0)
+            continue;
+        netGroup.forEach(net => {
+            if (net.family === 'IPv4' && !net.internal) {
+                address.push(net.address);
+            }
+        });
+    }
+    return address[0];
+}
 function getNodeProcess() {
     return __awaiter(this, void 0, void 0, function* () {
         const { stdout, stderr } = yield exec('ps aux | grep monitor_cube_start');
@@ -89,15 +105,16 @@ function getNodeProcess() {
 }
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
+        const IP = getLocalIP();
         const pList = yield getNodeProcess();
         if (pList.length !== 0) {
-            blueLog(`has available server PID: ${pList[0].pid} PORT: ${pList[0].port}`);
+            blueLog(`has available server NET:[${IP}:${pList[0].pid}] PORT:${pList[0].port}`);
             return;
         }
         const port = yield getFreePort();
         if (!port)
             return;
-        greenLog(`start server PID: ${process.pid} PORT: ${port}`);
+        greenLog(`start server NET:[${IP}:${process.pid}] PORT:${port}`);
         http_1.default.createServer(function (request, response) {
             const url = request.url;
             if ((url === null || url === void 0 ? void 0 : url.indexOf('/info')) === 0) {
@@ -132,8 +149,9 @@ function showServer() {
             redLog('no available server');
             return;
         }
+        const IP = getLocalIP();
         for (const p of pList) {
-            blueLog(`available server PORT: ${p.port} PID: ${p.pid}`);
+            blueLog(`available server NET:[${IP}:${p.port}] PID:${p.pid}`);
         }
     });
 }

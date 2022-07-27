@@ -12,7 +12,7 @@
     "stop": "node out/index.js monitor_cube_stop"
   },
   "bin": {
-    "mc": "./out/index.js"
+    "mc": "node ./out/index.js"
   },
   "author": "zane.zyz",
   "license": "ISC",
