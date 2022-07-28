@@ -3225,7 +3225,7 @@ function startServer() {
         const IP = getLocalIP();
         const pList = yield getNodeProcess();
         if (pList.length !== 0) {
-            blueLog(`has available server NET:[${IP}:${pList[0].pid}] PORT:${pList[0].port}`);
+            blueLog(`has available server NET:[${IP}:${pList[0].port}] PID:${pList[0].pid}`);
             return;
         }
         const port = yield getFreePort();

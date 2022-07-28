@@ -9,7 +9,9 @@ export default [{
     banner: '#!/usr/bin/env node',
   },
   plugins: [
-    resolve(),
+    resolve({
+      preferBuiltins: true
+    }),
     commonjs()
   ]
 }, {
@@ -19,7 +21,9 @@ export default [{
     format: 'cjs',
   },
   plugins: [
-    resolve(),
+    resolve({
+      preferBuiltins: true
+    }),
     commonjs()
   ]
 }]
