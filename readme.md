@@ -10,16 +10,15 @@ npm install monitor-cube -g
 
 ``` bash
 # start server in nopub mode
-# !!!notice!!! must add '&' at end of command
-mc monitor_cube_start &
+mc start &
 ```
 
 ``` bash
 # stop server
-mc monitor_cube_stop
+mc stop
 ```
 
 ``` bash
 # show available server
-mc monitor_cube_show
+mc show
 ```
