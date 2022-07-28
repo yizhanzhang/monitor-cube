@@ -1,6 +1,6 @@
 {
   "name": "@yizhanzhang/monitor-cube",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "monitor theme for little cube",
   "main": "index.ts",
   "scripts": {
