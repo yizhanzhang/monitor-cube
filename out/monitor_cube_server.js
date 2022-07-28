@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showServer = exports.stopServer = exports.startServer = void 0;
 const http_1 = __importDefault(require("http"));
 const chalk_1 = __importDefault(require("chalk"));
 const util_1 = __importDefault(require("util"));
@@ -74,7 +73,7 @@ function getLocalIP() {
 }
 function getNodeProcess() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { stdout, stderr } = yield exec('ps aux | grep monitor_cube_start');
+        const { stdout, stderr } = yield exec('ps aux | grep monitor_cube_server.js');
         if (stderr) {
             redLog('find node process error');
             return [];
@@ -89,7 +88,7 @@ function getNodeProcess() {
                 commandArr: COMMAND,
                 command: COMMAND.join(' '),
             };
-        }).filter(item => item.commandArr[0] === 'node' && item.command.indexOf('monitor_cube_start') >= 0 && item.pid !== process.pid).map(item => ({
+        }).filter(item => item.commandArr[0] === 'node' && item.command.indexOf('start') >= 0 && item.pid !== process.pid).map(item => ({
             pid: item.pid,
             command: item.command,
             port: -1,
@@ -114,6 +113,7 @@ function startServer() {
         const port = yield getFreePort();
         if (!port)
             return;
+        greenLog('[welcome to monitor cube]');
         greenLog(`local ip: ${IP.join(' | ')}`);
         greenLog(`start server PORT:${port} PID:${process.pid}`);
         http_1.default.createServer(function (request, response) {
@@ -131,7 +131,6 @@ function startServer() {
         }).listen(port);
     });
 }
-exports.startServer = startServer;
 function stopServer() {
     return __awaiter(this, void 0, void 0, function* () {
         greenLog('begin to stop server');
@@ -143,7 +142,6 @@ function stopServer() {
         greenLog('stop server success');
     });
 }
-exports.stopServer = stopServer;
 function showServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const pList = yield getNodeProcess();
@@ -158,4 +156,17 @@ function showServer() {
         }
     });
 }
-exports.showServer = showServer;
+const type = process.argv[2];
+switch (type) {
+    case 'start':
+        startServer();
+        break;
+    case 'stop':
+        stopServer();
+        break;
+    case 'show':
+        showServer();
+        break;
+    default:
+        break;
+}

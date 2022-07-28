@@ -71,7 +71,7 @@ function getLocalIP() {
 }
 
 async function getNodeProcess() {
-  const { stdout, stderr } = await exec('ps aux | grep monitor_cube_start')
+  const { stdout, stderr } = await exec('ps aux | grep monitor_cube_server.js')
   if (stderr) {
     redLog('find node process error')
     return []
@@ -87,7 +87,7 @@ async function getNodeProcess() {
         command: COMMAND.join(' '),
       }
     }).filter(item =>
-      item.commandArr[0] === 'node' && item.command.indexOf('monitor_cube_start') >= 0 && item.pid !== process.pid
+      item.commandArr[0] === 'node' && item.command.indexOf('start') >= 0 && item.pid !== process.pid
     ).map(item => ({
       pid: item.pid,
       command: item.command,
@@ -101,7 +101,7 @@ async function getNodeProcess() {
   return pList
 }
 
-export async function startServer () {
+async function startServer () {
   const IP = getLocalIP()
   const pList = await getNodeProcess()
   if (pList.length !== 0) {
@@ -110,6 +110,7 @@ export async function startServer () {
   }
   const port = await getFreePort()
   if (!port) return
+  greenLog('[welcome to monitor cube]')
   greenLog(`local ip: ${IP.join(' | ')}`)
   greenLog(`start server PORT:${port} PID:${process.pid}`)
   http.createServer(function (request, response) {
@@ -126,7 +127,7 @@ export async function startServer () {
   }).listen(port);
 }
 
-export async function stopServer () {
+async function stopServer () {
   greenLog('begin to stop server')
   const pList = await getNodeProcess()
   for (const p of pList) {
@@ -136,7 +137,7 @@ export async function stopServer () {
   greenLog('stop server success')
 }
 
-export async function showServer () {
+async function showServer () {
   const pList = await getNodeProcess()
   if (pList.length === 0) {
     redLog('no available server')
@@ -148,4 +149,19 @@ export async function showServer () {
   for (const p of pList) {
     blueLog(`available server PORT:${p.port} PID:${p.pid}`)
   }
+}
+
+const type = process.argv[2]
+switch (type) {
+  case 'start':
+    startServer()
+    break
+  case 'stop':
+    stopServer()
+    break
+  case 'show':
+    showServer()
+    break
+  default:
+    break
 }

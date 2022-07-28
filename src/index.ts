@@ -1,9 +1,14 @@
 #!/usr/bin/env node
+import { spawn } from 'child_process'
 import commander from 'commander'
-
-import { showServer, startServer, stopServer } from './server'
+import path from 'path'
 
 const program = commander.program
+
+function execServer(command: string) {
+  const serverPath = path.resolve(__dirname, './monitor_cube_server.js')
+  spawn('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit']  })
+}
 
 program
   .name('monitor-cube')
@@ -11,22 +16,23 @@ program
   .description('A monitor in cube, powered by yizhanzhang')
   .version('1.0.0');
 
-program.command('monitor_cube_start')
+program.command('start')
   .description('start http server for monitor')
   .action(() => {
-    startServer()
+    execServer('start')
+    process.exit(0)
   })
 
-program.command('monitor_cube_stop')
+program.command('stop')
   .description('stop http server for monitor')
   .action(() => {
-    stopServer()
+    execServer('stop')
   })
 
-program.command('monitor_cube_show')
+program.command('show')
   .description('show available http server for monitor')
   .action(() => {
-    showServer()
+    execServer('show')
   })
 
 program.parse()

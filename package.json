@@ -7,12 +7,12 @@
     "postinstall": "patch-package",
     "tsc": "tsc",
     "dev": "npm run tsc && npm run start",
-    "start": "node out/index.js monitor_cube_start",
-    "show": "node out/index.js monitor_cube_show",
-    "stop": "node out/index.js monitor_cube_stop"
+    "start": "node out/index.js start",
+    "show": "node out/index.js show",
+    "stop": "node out/index.js stop"
   },
   "bin": {
-    "mc": "node ./out/index.js"
+    "mc": "./out/index.js"
   },
   "author": "zane.zyz",
   "license": "ISC",

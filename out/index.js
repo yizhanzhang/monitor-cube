@@ -4,27 +4,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const child_process_1 = require("child_process");
 const commander_1 = __importDefault(require("commander"));
-const server_1 = require("./server");
+const path_1 = __importDefault(require("path"));
 const program = commander_1.default.program;
+function execServer(command) {
+    const serverPath = path_1.default.resolve(__dirname, './monitor_cube_server.js');
+    (0, child_process_1.spawn)('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit'] });
+}
 program
     .name('monitor-cube')
     .usage('mc start | mc stop | mc show')
     .description('A monitor in cube, powered by yizhanzhang')
     .version('1.0.0');
-program.command('monitor_cube_start')
+program.command('start')
     .description('start http server for monitor')
     .action(() => {
-    (0, server_1.startServer)();
+    execServer('start');
+    process.exit(0);
 });
-program.command('monitor_cube_stop')
+program.command('stop')
     .description('stop http server for monitor')
     .action(() => {
-    (0, server_1.stopServer)();
+    execServer('stop');
 });
-program.command('monitor_cube_show')
+program.command('show')
     .description('show available http server for monitor')
     .action(() => {
-    (0, server_1.showServer)();
+    execServer('show');
 });
 program.parse();
