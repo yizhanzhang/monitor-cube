@@ -5,27 +5,28 @@
   "main": "index.ts",
   "scripts": {
     "postinstall": "patch-package",
-    "tsc": "tsc",
-    "dev": "npm run tsc && npm run start",
-    "start": "node out/index.js start",
-    "show": "node out/index.js show",
-    "stop": "node out/index.js stop"
+    "build": "tsc && rollup -c",
+    "start": "node bin/index.js start",
+    "show": "node bin/index.js show",
+    "stop": "node bin/index.js stop"
   },
   "bin": {
-    "mc": "./out/index.js"
+    "mc": "./bin/index.js"
   },
   "author": "zane.zyz",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.6.1",
     "@types/node-os-utils": "^1.3.0",
-    "chalk": "^4.0.1",
-    "commander": "^9.4.0",
-    "node-os-utils": "^1.3.7",
-    "patch-package": "^6.4.7",
-    "typescript": "^4.8.0-dev.20220726"
+    "typescript": "^4.8.0-dev.20220726",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "dependencies": {
-    "find-free-port": "^2.0.0"
+    "chalk": "^4.0.1",
+    "commander": "^9.4.0",
+    "find-free-port": "^2.0.0",
+    "node-os-utils": "^1.3.7",
+    "patch-package": "^6.4.7"
   }
 }

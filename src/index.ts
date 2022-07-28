@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { spawn } from 'child_process'
 import commander from 'commander'
 import path from 'path'
@@ -14,7 +13,7 @@ program
   .name('monitor-cube')
   .usage('mc start | mc stop | mc show')
   .description('A monitor in cube, powered by yizhanzhang')
-  .version('1.0.0');
+  .version('1.0.0')
 
 program.command('start')
   .description('start http server for monitor')

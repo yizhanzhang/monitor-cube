@@ -1,13 +1,13 @@
 diff --git a/node_modules/node-os-utils/lib/netstat.js b/node_modules/node-os-utils/lib/netstat.js
-index 8efc5e8..624cd54 100644
+index 8efc5e8..3ab9c6f 100644
 --- a/node_modules/node-os-utils/lib/netstat.js
 +++ b/node_modules/node-os-utils/lib/netstat.js
 @@ -99,34 +99,54 @@ function ifconfigStats () {
    })
  }
  
-+function isEthernetInterface(interface) {
-+  return interface.indexOf('en') === 0
++function isEthernetInterface(inter) {
++  return inter.indexOf('en') === 0
 +}
 +
  bucket.netstat = {

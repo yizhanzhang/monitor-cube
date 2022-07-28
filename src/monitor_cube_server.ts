@@ -63,7 +63,7 @@ function getLocalIP() {
     if (!netGroup || name.indexOf('en') !== 0) continue
     netGroup.forEach(net => {
       if (net.family === 'IPv4' && !net.internal) {
-        address.push(net.address);
+        address.push(net.address)
       }
     })
   }
