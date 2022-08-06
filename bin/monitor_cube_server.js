@@ -3147,18 +3147,81 @@ const redLog = function (...others) {
 const blueLog = function (...others) {
     console.log(chalk_1.default.blue('[MC]:', ...others));
 };
+class NetInfoAvatar {
+    constructor() {
+        this.lastRecord = "";
+        this.lastReecordTimestamp = 0;
+        this.isStart = false;
+        this.getTimeout = undefined;
+        this.cancelTimeout = undefined;
+    }
+    getRecord() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.isStart) {
+                this.isStart = true;
+                this.addTimeout();
+                this.startCancelTimeout();
+                return this.getCore();
+            }
+            else {
+                this.startCancelTimeout();
+                return this.lastRecord;
+            }
+        });
+    }
+    getCore() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield nodeOsUtils.netstat.inOut(100);
+            this.lastRecord = result;
+            this.lastReecordTimestamp = Date.now();
+            return result;
+        });
+    }
+    addTimeout() {
+        if (this.getTimeout) {
+            clearTimeout(this.getTimeout);
+        }
+        this.getTimeout = setTimeout(() => {
+            this.getTimeout = undefined;
+            if (this.isStart) {
+                this.getCore();
+                this.addTimeout();
+            }
+        }, 500);
+    }
+    startCancelTimeout() {
+        if (this.cancelTimeout) {
+            clearTimeout(this.cancelTimeout);
+        }
+        this.cancelTimeout = setTimeout(() => {
+            this.isStart = false;
+            this.cancelTimeout = undefined;
+        }, 5000);
+    }
+}
+const netInfoAvatar = new NetInfoAvatar();
 function getSystemInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const cpuData = yield nodeOsUtils.cpu.usage();
             const memInfo = yield nodeOsUtils.mem.info();
             const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
-            const netInfo = yield nodeOsUtils.netstat.inOut(1000);
-            const netData = typeof netInfo === 'string' ? { inputMb: 0, outputMb: 0 } : netInfo.total;
+            const netInfo = yield netInfoAvatar.getRecord();
+            let downloadData = "";
+            let uploadData = "";
+            if (typeof netInfo === 'string') {
+                downloadData = "00.00M";
+                uploadData = "00.00M";
+            }
+            else {
+                downloadData = netInfo.total.inputMb.toFixed(2) + 'M';
+                uploadData = netInfo.total.outputMb.toFixed(2) + 'M';
+            }
             resolve({
                 cpuData,
                 memData,
-                netData
+                downloadData,
+                uploadData,
             });
         }));
     });
