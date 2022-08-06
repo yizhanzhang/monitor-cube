@@ -3214,8 +3214,8 @@ function getSystemInfo() {
                 uploadData = "00.00M";
             }
             else {
-                downloadData = netInfo.total.inputMb.toFixed(2) + "M";
-                uploadData = netInfo.total.outputMb.toFixed(2) + "M";
+                downloadData = (netInfo.total.inputMb * 10).toFixed(2) + "M";
+                uploadData = (netInfo.total.outputMb * 10).toFixed(2) + "M";
                 if (downloadData.length < 6)
                     downloadData = "0" + downloadData;
                 if (uploadData.length < 6)
