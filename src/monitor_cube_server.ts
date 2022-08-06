@@ -82,7 +82,7 @@ const netInfoAvatar = new NetInfoAvatar()
 
 async function getSystemInfo() {
   return new Promise<SystemInfo>(async (resolve, reject) => {
-    const cpuData = await cpu.usage()
+    const cpuData = parseInt((await cpu.usage()).toFixed(0))
     const memInfo = await mem.info()
     const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
     const netInfo = await netInfoAvatar.getRecord()
@@ -92,8 +92,10 @@ async function getSystemInfo() {
       downloadData = "00.00M"
       uploadData = "00.00M"
     } else {
-      downloadData = netInfo.total.inputMb.toFixed(2) + 'M';
-      uploadData = netInfo.total.outputMb.toFixed(2) + 'M';
+      downloadData = netInfo.total.inputMb.toFixed(2) + "M"
+      uploadData = netInfo.total.outputMb.toFixed(2) + "M"
+      if (downloadData.length < 6) downloadData = "0" + downloadData
+      if (uploadData.length < 6) uploadData = "0" + uploadData
     }
 
     resolve({

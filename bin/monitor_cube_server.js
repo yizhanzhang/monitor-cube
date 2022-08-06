@@ -3203,7 +3203,7 @@ const netInfoAvatar = new NetInfoAvatar();
 function getSystemInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const cpuData = yield nodeOsUtils.cpu.usage();
+            const cpuData = parseInt((yield nodeOsUtils.cpu.usage()).toFixed(0));
             const memInfo = yield nodeOsUtils.mem.info();
             const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
             const netInfo = yield netInfoAvatar.getRecord();
@@ -3214,8 +3214,12 @@ function getSystemInfo() {
                 uploadData = "00.00M";
             }
             else {
-                downloadData = netInfo.total.inputMb.toFixed(2) + 'M';
-                uploadData = netInfo.total.outputMb.toFixed(2) + 'M';
+                downloadData = netInfo.total.inputMb.toFixed(2) + "M";
+                uploadData = netInfo.total.outputMb.toFixed(2) + "M";
+                if (downloadData.length < 6)
+                    downloadData = "0" + downloadData;
+                if (uploadData.length < 6)
+                    uploadData = "0" + uploadData;
             }
             resolve({
                 cpuData,
