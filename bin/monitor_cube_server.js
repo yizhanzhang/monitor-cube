@@ -5,8 +5,8 @@ var os = require('os');
 var tty = require('tty');
 var util$2 = require('util');
 var child_process = require('child_process');
-var fs = require('fs');
 var net = require('net');
+var fs = require('fs');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -15,8 +15,8 @@ var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
 var tty__default = /*#__PURE__*/_interopDefaultLegacy(tty);
 var util__default = /*#__PURE__*/_interopDefaultLegacy(util$2);
 var child_process__default = /*#__PURE__*/_interopDefaultLegacy(child_process);
-var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var net__default = /*#__PURE__*/_interopDefaultLegacy(net);
+var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1896,6 +1896,63 @@ chalk.stderr.supportsColor = stderrColor;
 
 var source = chalk;
 
+// call method 1: (port, cb(err, freePort))
+// call method 2: (portBeg, portEnd, cb(err, freePort))
+// call method 3: (portBeg, host, cb(err, freePort))
+// call method 4: (portBeg, portEnd, host, cb(err, freePort))
+// call method 5: (portBeg, portEnd, host, howmany, cb(err, freePort1, freePort2, ...))
+
+function findFreePort(beg, ...rest){
+  const p = rest.slice(0, rest.length - 1), cb = rest[rest.length - 1];
+  let [end, ip, cnt] = Array.from(p);
+  if (!ip && end && !/^\d+$/.test(end)) { // deal with method 3
+    ip = end;
+    end = 65534;
+  } else {
+    if (end == null) { end = 65534; }
+  }
+  if (cnt == null) { cnt = 1; }
+
+  const retcb = cb;
+  const res = [];
+  const probe = function(ip, port, cb){
+    const s = net__default["default"].createConnection({port: port, host: ip});
+    s.on('connect', function(){ s.end(); cb(null, port + 1); });
+    s.on('error', err=> { cb(port); });  // can't connect, port is available
+  };
+  var onprobe = function(port, nextPort){
+    if (port) {
+      res.push(port);
+      if (res.length >= cnt) {
+        retcb(null, ...res);
+      } else {
+        setImmediate(()=> probe(ip, port+1, onprobe));
+      }
+    } else {
+      if (nextPort>=end) {
+        retcb(new Error("No available ports"));
+      } else {
+        setImmediate(()=> probe(ip, nextPort, onprobe));
+      }
+    }
+  };
+  return probe(ip, beg, onprobe);
+}
+function findFreePortPmfy(beg, ...rest) {
+  const last = rest[rest.length - 1];
+  if (typeof last === 'function') {
+    findFreePort(beg, ...rest);
+  } else {
+    return new Promise((resolve, reject) => {
+      findFreePort(beg, ...rest, (err, ...ports) => {
+        if (err) reject(err);
+        else resolve(ports);
+      });
+    })
+  }
+}
+var findFreePort_1 = findFreePortPmfy;
+
 /**
  * author       : Sunil Wang
  * createTime   : 2017/7/9 19:24
@@ -3059,62 +3116,85 @@ bucket.users = {
 
 var nodeOsUtils = bucket;
 
-// call method 1: (port, cb(err, freePort))
-// call method 2: (portBeg, portEnd, cb(err, freePort))
-// call method 3: (portBeg, host, cb(err, freePort))
-// call method 4: (portBeg, portEnd, host, cb(err, freePort))
-// call method 5: (portBeg, portEnd, host, howmany, cb(err, freePort1, freePort2, ...))
+var net_info_avatar = createCommonjsModule(function (module, exports) {
+var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 
-function findFreePort(beg, ...rest){
-  const p = rest.slice(0, rest.length - 1), cb = rest[rest.length - 1];
-  let [end, ip, cnt] = Array.from(p);
-  if (!ip && end && !/^\d+$/.test(end)) { // deal with method 3
-    ip = end;
-    end = 65534;
-  } else {
-    if (end == null) { end = 65534; }
-  }
-  if (cnt == null) { cnt = 1; }
-
-  const retcb = cb;
-  const res = [];
-  const probe = function(ip, port, cb){
-    const s = net__default["default"].createConnection({port: port, host: ip});
-    s.on('connect', function(){ s.end(); cb(null, port + 1); });
-    s.on('error', err=> { cb(port); });  // can't connect, port is available
-  };
-  var onprobe = function(port, nextPort){
-    if (port) {
-      res.push(port);
-      if (res.length >= cnt) {
-        retcb(null, ...res);
-      } else {
-        setImmediate(()=> probe(ip, port+1, onprobe));
-      }
-    } else {
-      if (nextPort>=end) {
-        retcb(new Error("No available ports"));
-      } else {
-        setImmediate(()=> probe(ip, nextPort, onprobe));
-      }
+class NetInfoAvatar {
+    constructor() {
+        this.isAwake = false;
+        this.sleepTime = Date.now();
+        this.info = { downloadData: '', uploadData: '' };
+        this.lastReecordTimestamp = 0;
+        this.isStart = false;
+        this.getTimeout = undefined;
     }
-  };
-  return probe(ip, beg, onprobe);
+    getInfo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.isAwake) {
+                yield this.updateInfo();
+                this.isAwake = true;
+                this.updateSleepTime();
+                this.loopTimeout();
+                return this.info;
+            }
+            else {
+                this.updateSleepTime();
+                return this.info;
+            }
+        });
+    }
+    updateInfo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield nodeOsUtils.netstat.inOut(1000);
+            let downloadData = '';
+            let uploadData = '';
+            if (typeof result === 'string') {
+                downloadData = "00.00M";
+                uploadData = "00.00M";
+            }
+            else {
+                downloadData = (result.total.inputMb).toFixed(2) + "M";
+                uploadData = (result.total.outputMb).toFixed(2) + "M";
+                if (downloadData.length < 6)
+                    downloadData = "0" + downloadData;
+                if (uploadData.length < 6)
+                    uploadData = "0" + uploadData;
+            }
+            this.info = { downloadData, uploadData };
+        });
+    }
+    updateSleepTime() {
+        this.sleepTime = Date.now() + 1000 * 5;
+    }
+    loopTimeout() {
+        setTimeout(() => {
+            if (Date.now() < this.sleepTime) {
+                this.updateInfo().then(() => {
+                    this.loopTimeout();
+                }).catch(() => {
+                    console.log('LOOP ERROR');
+                });
+            }
+            else {
+                this.isAwake = false;
+            }
+        }, 1000);
+    }
 }
-function findFreePortPmfy(beg, ...rest) {
-  const last = rest[rest.length - 1];
-  if (typeof last === 'function') {
-    findFreePort(beg, ...rest);
-  } else {
-    return new Promise((resolve, reject) => {
-      findFreePort(beg, ...rest, (err, ...ports) => {
-        if (err) reject(err);
-        else resolve(ports);
-      });
-    })
-  }
-}
-var findFreePort_1 = findFreePortPmfy;
+const netInfoAvatar = new NetInfoAvatar();
+exports.default = netInfoAvatar;
+});
+
+unwrapExports(net_info_avatar);
 
 var monitor_cube_server = createCommonjsModule(function (module, exports) {
 var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -3130,13 +3210,15 @@ var __importDefault = (commonjsGlobal && commonjsGlobal.__importDefault) || func
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 const http_1 = __importDefault(http__default["default"]);
 const chalk_1 = __importDefault(source);
 const util_1 = __importDefault(util__default["default"]);
 const child_process_1 = __importDefault(child_process__default["default"]);
 
+const find_free_port_1 = __importDefault(findFreePort_1);
 
-
+const net_info_avatar_1 = __importDefault(net_info_avatar);
 const exec = util_1.default.promisify(child_process_1.default.exec);
 const greenLog = function (...others) {
     console.log(chalk_1.default.green('[MC]:', ...others));
@@ -3147,97 +3229,27 @@ const redLog = function (...others) {
 const blueLog = function (...others) {
     console.log(chalk_1.default.blue('[MC]:', ...others));
 };
-class NetInfoAvatar {
-    constructor() {
-        this.lastRecord = "";
-        this.lastReecordTimestamp = 0;
-        this.isStart = false;
-        this.getTimeout = undefined;
-        this.cancelTimeout = undefined;
-    }
-    getRecord() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.isStart) {
-                this.isStart = true;
-                this.addTimeout();
-                this.startCancelTimeout();
-                return this.getCore();
-            }
-            else {
-                this.startCancelTimeout();
-                return this.lastRecord;
-            }
-        });
-    }
-    getCore() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield nodeOsUtils.netstat.inOut(100);
-            this.lastRecord = result;
-            this.lastReecordTimestamp = Date.now();
-            return result;
-        });
-    }
-    addTimeout() {
-        if (this.getTimeout) {
-            clearTimeout(this.getTimeout);
-        }
-        this.getTimeout = setTimeout(() => {
-            this.getTimeout = undefined;
-            if (this.isStart) {
-                this.getCore();
-                this.addTimeout();
-            }
-        }, 500);
-    }
-    startCancelTimeout() {
-        if (this.cancelTimeout) {
-            clearTimeout(this.cancelTimeout);
-        }
-        this.cancelTimeout = setTimeout(() => {
-            this.isStart = false;
-            this.cancelTimeout = undefined;
-        }, 5000);
-    }
-}
-const netInfoAvatar = new NetInfoAvatar();
 function getSystemInfo() {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const cpuData = parseInt((yield nodeOsUtils.cpu.usage()).toFixed(0));
-            const memInfo = yield nodeOsUtils.mem.info();
-            const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
-            const netInfo = yield netInfoAvatar.getRecord();
-            let downloadData = "";
-            let uploadData = "";
-            if (typeof netInfo === 'string') {
-                downloadData = "00.00M";
-                uploadData = "00.00M";
-            }
-            else {
-                downloadData = (netInfo.total.inputMb * 10).toFixed(2) + "M";
-                uploadData = (netInfo.total.outputMb * 10).toFixed(2) + "M";
-                if (downloadData.length < 6)
-                    downloadData = "0" + downloadData;
-                if (uploadData.length < 6)
-                    uploadData = "0" + uploadData;
-            }
-            resolve({
-                cpuData,
-                memData,
-                downloadData,
-                uploadData,
-            });
-        }));
+        const cpuData = parseInt((yield nodeOsUtils.cpu.usage()).toFixed(0));
+        const memInfo = yield nodeOsUtils.mem.info();
+        const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
+        const { downloadData, uploadData } = yield net_info_avatar_1.default.getInfo();
+        return {
+            cpuData,
+            memData,
+            downloadData,
+            uploadData,
+        };
     });
 }
 function getFreePort() {
     return new Promise((resolve, reject) => {
-        findFreePort_1(3000, (err, freePort) => {
-            if (err) {
-                redLog('can not find free port');
-                reject();
-            }
-            resolve(freePort);
+        (0, find_free_port_1.default)(3000).then((freePort) => {
+            resolve(freePort[0]);
+        }).catch(() => {
+            redLog('can not find free port');
+            reject();
         });
     });
 }
@@ -3257,8 +3269,9 @@ function getLocalIP() {
     return address;
 }
 function getNodeProcess() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const { stdout, stderr } = yield exec('ps aux | grep monitor_cube_server.js');
+        const { stdout, stderr } = yield exec('ps aux | grep monitor_cube_server');
         if (stderr) {
             redLog('find node process error');
             return [];
@@ -3267,6 +3280,7 @@ function getNodeProcess() {
             .split('\n')
             .filter(i => !!i)
             .map(i => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [USER, PID, CPU, MEM, VSZ, RSS, TTY, STAT, START, TIME, ...COMMAND] = i.split(' ').filter(s => !!s);
             return {
                 pid: Number(PID),
@@ -3279,10 +3293,11 @@ function getNodeProcess() {
             port: -1,
         }));
         for (const p of pList) {
-            const { stdout, stderr } = yield exec(`lsof -aPi -p ${p.pid} | awk 'NR != 1 { printf \"%s\", $9}'`);
+            // eslint-disable-next-line no-useless-escape
+            const { stdout, stderr } = yield exec(`lsof -aPi -p ${p.pid} | awk 'NR != 1 { printf "%s", $9}'`);
             if (stderr)
                 continue;
-            p.port = stdout ? Number(stdout.match(/\d+/)[0]) : -1;
+            p.port = stdout ? Number((_a = stdout.match(/\d+/)) === null || _a === void 0 ? void 0 : _a[0]) : -1;
         }
         return pList;
     });
@@ -3292,7 +3307,7 @@ function startServer() {
         const IP = getLocalIP();
         const pList = yield getNodeProcess();
         if (pList.length !== 0) {
-            blueLog(`has available server NET:[${IP}:${pList[0].port}] PID:${pList[0].pid}`);
+            blueLog(`has available server NET:[${IP.join(' | ')}:${pList[0].port}] PID:${pList[0].pid}`);
             return;
         }
         const port = yield getFreePort();
@@ -3304,7 +3319,7 @@ function startServer() {
         http_1.default.createServer(function (request, response) {
             const url = request.url;
             if ((url === null || url === void 0 ? void 0 : url.indexOf('/info')) === 0) {
-                getSystemInfo().then(res => {
+                void getSystemInfo().then(res => {
                     response.writeHead(200, { 'Content-Type': 'text/plain' });
                     response.end(JSON.stringify(res));
                 });
@@ -3344,13 +3359,13 @@ function showServer() {
 const type = process.argv[2];
 switch (type) {
     case 'start':
-        startServer();
+        void startServer();
         break;
     case 'stop':
-        stopServer();
+        void stopServer();
         break;
     case 'show':
-        showServer();
+        void showServer();
         break;
 }
 });
