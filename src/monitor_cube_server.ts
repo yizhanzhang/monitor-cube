@@ -3,7 +3,8 @@ import chalk from 'chalk'
 import util from 'util'
 import cp from 'child_process'
 import { networkInterfaces } from 'os'
-import { cpu, mem, netstat, NetStatMetrics } from 'node-os-utils'
+import { cpu, mem } from 'node-os-utils'
+import netInfoAvatar from './net_info_avatar'
 
 const fp = require("find-free-port")
 
@@ -28,75 +29,12 @@ interface SystemInfo {
   uploadData: string
 }
 
-class NetInfoAvatar {
-  public lastRecord: NetStatMetrics | string = ""
-  public lastReecordTimestamp: number = 0
-  public isStart: boolean = false
-  public getTimeout: NodeJS.Timeout | undefined = undefined
-  public cancelTimeout: NodeJS.Timeout | undefined = undefined
-
-  async getRecord() {
-    if (!this.isStart) {
-      this.isStart = true
-      this.addTimeout()
-      this.startCancelTimeout()
-      return this.getCore()
-    } else {
-      this.startCancelTimeout()
-      return this.lastRecord
-    }
-  }
-
-  async getCore() {
-    const result = await netstat.inOut(100)
-    this.lastRecord = result
-    this.lastReecordTimestamp = Date.now()
-    return result
-  }
-
-  addTimeout() {
-    if (this.getTimeout) {
-      clearTimeout(this.getTimeout)
-    }
-    this.getTimeout = setTimeout(() => {
-      this.getTimeout = undefined
-      if (this.isStart) {
-        this.getCore()
-        this.addTimeout()
-      }
-    }, 500)
-  }
-
-  startCancelTimeout() {
-    if (this.cancelTimeout) {
-      clearTimeout(this.cancelTimeout)
-    }
-    this.cancelTimeout = setTimeout(() => {
-      this.isStart = false
-      this.cancelTimeout = undefined
-    }, 5000)
-  }
-}
-
-const netInfoAvatar = new NetInfoAvatar()
-
 async function getSystemInfo() {
   return new Promise<SystemInfo>(async (resolve, reject) => {
     const cpuData = parseInt((await cpu.usage()).toFixed(0))
     const memInfo = await mem.info()
     const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
-    const netInfo = await netInfoAvatar.getRecord()
-    let downloadData = ""
-    let uploadData = ""
-    if (typeof netInfo === 'string') {
-      downloadData = "00.00M"
-      uploadData = "00.00M"
-    } else {
-      downloadData = (netInfo.total.inputMb * 10).toFixed(2) + "M"
-      uploadData = (netInfo.total.outputMb * 10).toFixed(2) + "M"
-      if (downloadData.length < 6) downloadData = "0" + downloadData
-      if (uploadData.length < 6) uploadData = "0" + uploadData
-    }
+    const { downloadData, uploadData } = await netInfoAvatar.getInfo()
 
     resolve({
       cpuData,
