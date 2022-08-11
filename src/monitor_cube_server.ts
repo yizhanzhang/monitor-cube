@@ -1,58 +1,49 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import http from 'http'
 import chalk from 'chalk'
 import util from 'util'
 import cp from 'child_process'
 import { networkInterfaces } from 'os'
+import fp from "find-free-port"
 import { cpu, mem } from 'node-os-utils'
 import netInfoAvatar from './net_info_avatar'
 
-const fp = require("find-free-port")
 
 const exec = util.promisify(cp.exec)
 
-const greenLog = function(...others: any) {
+const greenLog = function(...others: string[]) {
   console.log(chalk.green('[MC]:', ...others))
 }
 
-const redLog = function(...others: any) {
+const redLog = function(...others: string[]) {
   console.log(chalk.red('[MC]:', ...others))
 }
 
-const blueLog = function(...others: any) {
+const blueLog = function(...others: string[]) {
   console.log(chalk.blue('[MC]:', ...others))
 }
 
-interface SystemInfo {
-  cpuData: number
-  memData: number
-  downloadData: string
-  uploadData: string
-}
-
 async function getSystemInfo() {
-  return new Promise<SystemInfo>(async (resolve, reject) => {
-    const cpuData = parseInt((await cpu.usage()).toFixed(0))
-    const memInfo = await mem.info()
-    const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
-    const { downloadData, uploadData } = await netInfoAvatar.getInfo()
+  const cpuData = parseInt((await cpu.usage()).toFixed(0))
+  const memInfo = await mem.info()
+  const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
+  const { downloadData, uploadData } = await netInfoAvatar.getInfo()
 
-    resolve({
-      cpuData,
-      memData,
-      downloadData,
-      uploadData,
-    })
-  })
+  return {
+    cpuData,
+    memData,
+    downloadData,
+    uploadData,
+  }
 }
 
-function getFreePort() {
+function getFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
-    fp(3000, (err: any, freePort: number) => {
-      if (err) {
-        redLog('can not find free port')
-        reject()
-      }
-      resolve(freePort)
+    fp(3000).then((freePort) => {
+      resolve(freePort[0])
+    }).catch(() => {
+      redLog('can not find free port')
+      reject()
     })
   })
 }
@@ -73,7 +64,7 @@ function getLocalIP() {
 }
 
 async function getNodeProcess() {
-  const { stdout, stderr } = await exec('ps aux | grep monitor_cube_server.js')
+  const { stdout, stderr } = await exec('ps aux | grep monitor_cube_server')
   if (stderr) {
     redLog('find node process error')
     return []
@@ -82,6 +73,7 @@ async function getNodeProcess() {
     .split('\n')
     .filter(i => !!i)
     .map(i => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [USER, PID, CPU, MEM, VSZ, RSS, TTY, STAT, START, TIME, ...COMMAND] = i.split(' ').filter(s => !!s)
       return {
         pid: Number(PID),
@@ -96,9 +88,10 @@ async function getNodeProcess() {
       port: -1,
     }))
   for (const p of pList) {
-    const { stdout, stderr } = await exec(`lsof -aPi -p ${p.pid} | awk 'NR != 1 { printf \"%s\", $9}'`)
+    // eslint-disable-next-line no-useless-escape
+    const { stdout, stderr } = await exec(`lsof -aPi -p ${p.pid} | awk 'NR != 1 { printf "%s", $9}'`)
     if (stderr) continue
-    p.port = stdout ? Number(stdout.match(/\d+/)![0]) : -1
+    p.port = stdout ? Number(stdout.match(/\d+/)?.[0]) : -1
   }
   return pList
 }
@@ -107,7 +100,7 @@ async function startServer () {
   const IP = getLocalIP()
   const pList = await getNodeProcess()
   if (pList.length !== 0) {
-    blueLog(`has available server NET:[${IP}:${pList[0].port}] PID:${pList[0].pid}`)
+    blueLog(`has available server NET:[${IP.join(' | ')}:${pList[0].port}] PID:${pList[0].pid}`)
     return
   }
   const port = await getFreePort()
@@ -118,7 +111,7 @@ async function startServer () {
   http.createServer(function (request, response) {
     const url = request.url
     if (url?.indexOf('/info') === 0){
-      getSystemInfo().then(res => {
+      void getSystemInfo().then(res => {
         response.writeHead(200, {'Content-Type': 'text/plain'});
         response.end(JSON.stringify(res));
       })
@@ -154,15 +147,16 @@ async function showServer () {
 }
 
 const type = process.argv[2]
+
 switch (type) {
   case 'start':
-    startServer()
+    void startServer()
     break
   case 'stop':
-    stopServer()
+    void stopServer()
     break
   case 'show':
-    showServer()
+    void showServer()
     break
   default:
     break

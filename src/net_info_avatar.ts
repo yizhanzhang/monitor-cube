@@ -1,12 +1,12 @@
-import { netstat, NetStatMetrics } from 'node-os-utils'
+import { netstat } from 'node-os-utils'
 
 class NetInfoAvatar {
-  private isAwake: boolean = false
-  public info = { downloadData: '', uploadData: '' }
-  public lastReecordTimestamp: number = 0
-  public isStart: boolean = false
-  public getTimeout: NodeJS.Timeout | undefined = undefined
+  private isAwake = false
   private sleepTime = Date.now();
+  public info = { downloadData: '', uploadData: '' }
+  public lastReecordTimestamp = 0
+  public isStart = false
+  public getTimeout: NodeJS.Timeout | undefined = undefined
 
   async getInfo() {
     if (!this.isAwake) {
@@ -42,10 +42,13 @@ class NetInfoAvatar {
   }
 
   loopTimeout() {
-    setTimeout(async () => {
+    setTimeout(() => {
       if (Date.now() < this.sleepTime) {
-        await this.updateInfo();
-        this.loopTimeout();
+        this.updateInfo().then(() => {
+          this.loopTimeout();
+        }).catch(() => {
+          console.log('LOOP ERROR')
+        });
       } else {
         this.isAwake = false;
       }
