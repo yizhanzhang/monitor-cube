@@ -5,10 +5,10 @@
   "main": "index.ts",
   "scripts": {
     "postinstall": "patch-package",
-    "build": "tsc && rollup -c",
-    "start": "node bin/index.js start",
-    "show": "node bin/index.js show",
-    "stop": "node bin/index.js stop"
+    "build": "tsc",
+    "start": "node out/index.js start",
+    "show": "node out/index.js show",
+    "stop": "node out/index.js stop"
   },
   "bin": {
     "mc": "./bin/index.js"
@@ -30,6 +30,7 @@
     "commander": "^9.4.0",
     "find-free-port": "^2.0.0",
     "node-os-utils": "^1.3.7",
-    "patch-package": "^6.4.7"
+    "patch-package": "^6.4.7",
+    "serialport": "^10.4.0"
   }
 }
