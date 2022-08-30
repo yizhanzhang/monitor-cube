@@ -20,7 +20,10 @@ program.command('start')
   .description('start http server for monitor')
   .action(() => {
     execServer('start')
-    process.exit(0)
+    console.log('[MC]:front task will close after 10s')
+    setTimeout(() => {
+      process.exit(0)
+    }, 10000)
   })
 
 program.command('stop')
