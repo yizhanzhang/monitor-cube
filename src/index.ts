@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { spawn } from 'child_process'
 import commander from 'commander'
 import path from 'path'
