@@ -1,19 +1,31 @@
 import { SerialPort } from 'serialport'
 import { cpu, mem } from 'node-os-utils'
 import netInfoAvatar from './net_info_avatar'
+import { greenLog } from './log'
+import prompts from 'prompts';
 
 class MySerialPort {
   private port?: SerialPort
   private open = false
   private interval?: NodeJS.Timer
 
-  constructor(path: string, baudRate: number) {
-    this.port = new SerialPort({ path, baudRate })
-    this.port.on('error', (err) => {
-      console.log('[PORT ERROR]', err.message)
-    })
+  async initPort() {
+    const pList = await SerialPort.list()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const response = await prompts<string>([{
+      type: 'select',
+      name: 'path',
+      message: 'Matched Port:',
+      choices: pList.map(item => ({ title: item.path, value: item.path })),
+    },{
+      type: 'number',
+      name: 'baudRate',
+      message: 'Matched baudRate:',
+    }]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    this.port = new SerialPort({ path: response.path, baudRate: Number(response.baudRate) })
     this.port.on('open', () => {
-      console.log('[PORT OPEN]', 'success')
+      greenLog('[PORT OPEN]', 'success')
       this.open = true
     })
   }
@@ -35,12 +47,14 @@ class MySerialPort {
     this.port.write(JSON.stringify(result))
   }
 
-  loopHostInfo() {
+  async loopHostInfo() {
     if (this.interval) return
+
+    await this.initPort()
     this.interval = setInterval(() => {
       void this.pushHostInfo();
     }, 1000)
   }
 }
 
-export default new MySerialPort('/dev/cu.usbserial-1440', 115200)
+export default new MySerialPort()
