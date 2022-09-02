@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "patch-package",
     "build": "tsc",
+    "dev": "npm run build && node out/index.js",
     "start": "node out/index.js start",
     "show": "node out/index.js show",
     "stop": "node out/index.js stop"

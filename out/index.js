@@ -21,10 +21,10 @@ program.command('start')
     .description('start http server for monitor')
     .action(() => {
     execServer('start');
-    console.log('host will close after 10s');
+    console.log('[MC]:front task will close after 10s');
     setTimeout(() => {
         process.exit(0);
-    }, 10000);
+    }, 20000);
 });
 program.command('stop')
     .description('stop http server for monitor')

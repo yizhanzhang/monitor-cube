@@ -23,7 +23,7 @@ program.command('start')
     console.log('[MC]:front task will close after 10s')
     setTimeout(() => {
       process.exit(0)
-    }, 10000)
+    }, 20000)
   })
 
 program.command('stop')

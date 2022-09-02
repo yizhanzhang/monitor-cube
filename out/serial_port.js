@@ -38,7 +38,7 @@ class MySerialPort {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
             this.port = new serialport_1.SerialPort({ path: response.path, baudRate: Number(response.baudRate) });
             this.port.on('open', () => {
-                (0, log_1.greenLog)('[PORT OPEN]', 'success');
+                (0, log_1.greenLog)('port open success, you can exit this command');
                 this.open = true;
             });
         });
