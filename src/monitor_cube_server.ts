@@ -39,7 +39,7 @@ class MonitorCubeServer {
       await this.showServer()
     } else {
       greenLog('begin to start server')
-      await mySerialPort.loopHostInfo();
+      await mySerialPort.startLoop();
     }
     process.send?.('over');
   }

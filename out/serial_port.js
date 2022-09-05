@@ -16,8 +16,11 @@ const serialport_1 = require("serialport");
 const node_os_utils_1 = require("node-os-utils");
 const net_info_avatar_1 = __importDefault(require("./net_info_avatar"));
 const log_1 = require("./log");
-const prompts_1 = __importDefault(require("prompts"));
 const BAUD_RATE = 115200;
+const CH340_DEVICE = {
+    vendorId: '1a86',
+    productId: '7523'
+};
 class MySerialPort {
     constructor() {
         this.open = false;
@@ -25,19 +28,17 @@ class MySerialPort {
     initPort() {
         return __awaiter(this, void 0, void 0, function* () {
             const pList = yield serialport_1.SerialPort.list();
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-            const response = yield (0, prompts_1.default)([{
-                    type: 'select',
-                    name: 'path',
-                    message: 'Matched Port:',
-                    choices: pList.map(item => ({ title: item.path, value: item.path })),
-                }]);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-            this.port = new serialport_1.SerialPort({ path: response.path, baudRate: BAUD_RATE });
+            const targetPort = pList.find(item => item.vendorId === CH340_DEVICE.vendorId && item.productId === CH340_DEVICE.productId);
+            if (!targetPort) {
+                (0, log_1.redLog)('find no targetPort for CH340');
+                return false;
+            }
+            this.port = new serialport_1.SerialPort({ path: targetPort.path, baudRate: BAUD_RATE });
             this.port.on('open', () => {
-                (0, log_1.greenLog)('port open success');
+                (0, log_1.greenLog)('port open success: ' + targetPort.path);
                 this.open = true;
             });
+            return true;
         });
     }
     pushHostInfo() {
@@ -57,11 +58,13 @@ class MySerialPort {
             this.port.write(JSON.stringify(result));
         });
     }
-    loopHostInfo() {
+    startLoop() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.interval)
                 return;
-            yield this.initPort();
+            const inited = yield this.initPort();
+            if (!inited)
+                return;
             this.interval = setInterval(() => {
                 void this.pushHostInfo();
             }, 1000);

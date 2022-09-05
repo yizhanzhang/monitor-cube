@@ -1,10 +1,13 @@
 import { SerialPort } from 'serialport'
 import { cpu, mem } from 'node-os-utils'
 import netInfoAvatar from './net_info_avatar'
-import { greenLog } from './log'
-import prompts from 'prompts';
+import { greenLog, redLog } from './log'
 
 const BAUD_RATE = 115200
+const CH340_DEVICE = {
+  vendorId: '1a86',
+  productId: '7523'
+}
 
 class MySerialPort {
   private port?: SerialPort
@@ -13,19 +16,18 @@ class MySerialPort {
 
   async initPort() {
     const pList = await SerialPort.list()
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const response = await prompts<string>([{
-      type: 'select',
-      name: 'path',
-      message: 'Matched Port:',
-      choices: pList.map(item => ({ title: item.path, value: item.path })),
-    }]);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    this.port = new SerialPort({ path: response.path, baudRate: BAUD_RATE })
+    const targetPort = pList.find(item => item.vendorId === CH340_DEVICE.vendorId && item.productId === CH340_DEVICE.productId)
+    if (!targetPort) {
+      redLog('find no targetPort for CH340')
+      return false
+    }
+
+    this.port = new SerialPort({ path: targetPort.path, baudRate: BAUD_RATE })
     this.port.on('open', () => {
-      greenLog('port open success')
+      greenLog('port open success: ' + targetPort.path)
       this.open = true
     })
+    return true
   }
 
   async pushHostInfo() {
@@ -45,10 +47,12 @@ class MySerialPort {
     this.port.write(JSON.stringify(result))
   }
 
-  async loopHostInfo() {
+  async startLoop() {
     if (this.interval) return
 
-    await this.initPort()
+    const inited = await this.initPort()
+    if (!inited) return
+
     this.interval = setInterval(() => {
       void this.pushHostInfo();
     }, 1000)

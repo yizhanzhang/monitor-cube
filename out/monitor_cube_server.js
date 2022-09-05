@@ -53,7 +53,7 @@ class MonitorCubeServer {
             }
             else {
                 (0, log_1.greenLog)('begin to start server');
-                yield serial_port_1.default.loopHostInfo();
+                yield serial_port_1.default.startLoop();
             }
             (_a = process.send) === null || _a === void 0 ? void 0 : _a.call(process, 'over');
         });
