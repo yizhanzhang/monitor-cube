@@ -4,6 +4,8 @@ import netInfoAvatar from './net_info_avatar'
 import { greenLog } from './log'
 import prompts from 'prompts';
 
+const BAUD_RATE = 115200
+
 class MySerialPort {
   private port?: SerialPort
   private open = false
@@ -17,15 +19,11 @@ class MySerialPort {
       name: 'path',
       message: 'Matched Port:',
       choices: pList.map(item => ({ title: item.path, value: item.path })),
-    },{
-      type: 'number',
-      name: 'baudRate',
-      message: 'Matched baudRate:',
     }]);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    this.port = new SerialPort({ path: response.path, baudRate: Number(response.baudRate) })
+    this.port = new SerialPort({ path: response.path, baudRate: BAUD_RATE })
     this.port.on('open', () => {
-      greenLog('port open success, you can exit this command')
+      greenLog('port open success')
       this.open = true
     })
   }

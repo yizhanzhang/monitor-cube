@@ -10,7 +10,7 @@ const path_1 = __importDefault(require("path"));
 const program = commander_1.default.program;
 function execServer(command) {
     const serverPath = path_1.default.resolve(__dirname, './monitor_cube_server.js');
-    (0, child_process_1.spawn)('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit'] });
+    return (0, child_process_1.spawn)('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
 }
 program
     .name('monitor-cube')
@@ -20,11 +20,12 @@ program
 program.command('start')
     .description('start http server for monitor')
     .action(() => {
-    execServer('start');
-    console.log('[MC]:front task will close after 10s');
-    setTimeout(() => {
-        process.exit(0);
-    }, 20000);
+    const cp = execServer('start');
+    cp.on('message', (message) => {
+        if (message === 'over') {
+            process.exit(0);
+        }
+    });
 });
 program.command('stop')
     .description('stop http server for monitor')

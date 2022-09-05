@@ -7,7 +7,7 @@ const program = commander.program
 
 function execServer(command: string) {
   const serverPath = path.resolve(__dirname, './monitor_cube_server.js')
-  spawn('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit']  })
+  return spawn('node', [serverPath, command], { detached: true, stdio: ['inherit', 'inherit', 'inherit', 'ipc']  })
 }
 
 program
@@ -19,11 +19,12 @@ program
 program.command('start')
   .description('start http server for monitor')
   .action(() => {
-    execServer('start')
-    console.log('[MC]:front task will close after 10s')
-    setTimeout(() => {
-      process.exit(0)
-    }, 20000)
+    const cp = execServer('start')
+    cp.on('message', (message) => {
+      if (message === 'over') {
+        process.exit(0)
+      }
+    })
   })
 
 program.command('stop')

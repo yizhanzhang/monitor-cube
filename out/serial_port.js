@@ -17,6 +17,7 @@ const node_os_utils_1 = require("node-os-utils");
 const net_info_avatar_1 = __importDefault(require("./net_info_avatar"));
 const log_1 = require("./log");
 const prompts_1 = __importDefault(require("prompts"));
+const BAUD_RATE = 115200;
 class MySerialPort {
     constructor() {
         this.open = false;
@@ -30,15 +31,11 @@ class MySerialPort {
                     name: 'path',
                     message: 'Matched Port:',
                     choices: pList.map(item => ({ title: item.path, value: item.path })),
-                }, {
-                    type: 'number',
-                    name: 'baudRate',
-                    message: 'Matched baudRate:',
                 }]);
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-            this.port = new serialport_1.SerialPort({ path: response.path, baudRate: Number(response.baudRate) });
+            this.port = new serialport_1.SerialPort({ path: response.path, baudRate: BAUD_RATE });
             this.port.on('open', () => {
-                (0, log_1.greenLog)('port open success, you can exit this command');
+                (0, log_1.greenLog)('port open success');
                 this.open = true;
             });
         });

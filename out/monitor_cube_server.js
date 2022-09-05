@@ -44,9 +44,18 @@ class MonitorCubeServer {
         });
     }
     static startServer() {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            (0, log_1.greenLog)('begin to start server');
-            yield serial_port_1.default.loopHostInfo();
+            // check available
+            const pList = yield this.getNodeProcess();
+            if (pList.length > 0) {
+                yield this.showServer();
+            }
+            else {
+                (0, log_1.greenLog)('begin to start server');
+                yield serial_port_1.default.loopHostInfo();
+            }
+            (_a = process.send) === null || _a === void 0 ? void 0 : _a.call(process, 'over');
         });
     }
     static stopServer() {

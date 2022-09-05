@@ -33,8 +33,15 @@ class MonitorCubeServer {
   }
 
   private static async startServer () {
-    greenLog('begin to start server')
-    await mySerialPort.loopHostInfo()
+    // check available
+    const pList = await this.getNodeProcess()
+    if (pList.length > 0) {
+      await this.showServer()
+    } else {
+      greenLog('begin to start server')
+      await mySerialPort.loopHostInfo();
+    }
+    process.send?.('over');
   }
 
   private static async stopServer () {
