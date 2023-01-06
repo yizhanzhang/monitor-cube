@@ -1,4 +1,5 @@
 import { SerialPort } from 'serialport'
+import { PortInfo } from "@serialport/bindings-cpp"
 import { cpu, mem } from 'node-os-utils'
 import netInfoAvatar from './net_info_avatar'
 import { greenLog, redLog } from './log'
@@ -15,7 +16,7 @@ class MySerialPort {
   private interval?: NodeJS.Timer
 
   async initPort() {
-    const pList = await SerialPort.list()
+    const pList: PortInfo[] = await SerialPort.list()
     const targetPort = pList.find(item => item.vendorId === CH340_DEVICE.vendorId && item.productId === CH340_DEVICE.productId)
     if (!targetPort) {
       redLog('find no targetPort for CH340')
