@@ -2,6 +2,7 @@ import { SerialPort } from 'serialport'
 import { PortInfo } from "@serialport/bindings-cpp"
 import { cpu, mem } from 'node-os-utils'
 import netInfoAvatar from './net_info_avatar'
+import stockAvatar from './stock_avatar'
 import { greenLog, redLog } from './log'
 
 const BAUD_RATE = 115200
@@ -13,7 +14,7 @@ const CH340_DEVICE = {
 class MySerialPort {
   private port?: SerialPort
   private open = false
-  private interval?: NodeJS.Timer
+  private intervalFlag = false
 
   async initPort() {
     const pList: PortInfo[] = await SerialPort.list()
@@ -38,24 +39,30 @@ class MySerialPort {
     const memInfo = await mem.info()
     const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
     const { downloadData, uploadData } = await netInfoAvatar.getInfo()
+    const { stockStatus, stockData } = await stockAvatar.getInfo()
     const result = {
       cpuData,
       memData,
       downloadData,
       uploadData,
+      stockStatus,
+      stockData,
     }
 
     this.port.write(JSON.stringify(result))
   }
 
   async startLoop() {
-    if (this.interval) return
-
     const inited = await this.initPort()
     if (!inited) return
 
-    this.interval = setInterval(() => {
-      void this.pushHostInfo();
+    setInterval(() => {
+      void (async () => {
+        if (this.intervalFlag) return;
+        this.intervalFlag = true
+        await this.pushHostInfo();
+        this.intervalFlag = false;
+      })()
     }, 1000)
   }
 }

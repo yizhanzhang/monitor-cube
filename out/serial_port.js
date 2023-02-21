@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const serialport_1 = require("serialport");
 const node_os_utils_1 = require("node-os-utils");
 const net_info_avatar_1 = __importDefault(require("./net_info_avatar"));
+const stock_avatar_1 = __importDefault(require("./stock_avatar"));
 const log_1 = require("./log");
 const BAUD_RATE = 115200;
 const CH340_DEVICE = {
@@ -24,6 +25,7 @@ const CH340_DEVICE = {
 class MySerialPort {
     constructor() {
         this.open = false;
+        this.intervalFlag = false;
     }
     initPort() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -49,24 +51,31 @@ class MySerialPort {
             const memInfo = yield node_os_utils_1.mem.info();
             const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
             const { downloadData, uploadData } = yield net_info_avatar_1.default.getInfo();
+            const { stockStatus, stockData } = yield stock_avatar_1.default.getInfo();
             const result = {
                 cpuData,
                 memData,
                 downloadData,
                 uploadData,
+                stockStatus,
+                stockData,
             };
             this.port.write(JSON.stringify(result));
         });
     }
     startLoop() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.interval)
-                return;
             const inited = yield this.initPort();
             if (!inited)
                 return;
-            this.interval = setInterval(() => {
-                void this.pushHostInfo();
+            setInterval(() => {
+                void (() => __awaiter(this, void 0, void 0, function* () {
+                    if (this.intervalFlag)
+                        return;
+                    this.intervalFlag = true;
+                    yield this.pushHostInfo();
+                    this.intervalFlag = false;
+                }))();
             }, 1000);
         });
     }
