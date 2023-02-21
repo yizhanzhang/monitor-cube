@@ -12,44 +12,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const puppeteer_1 = __importDefault(require("puppeteer"));
-const stockInfo = {
-    timeStamp: 0,
-    status: 0,
-    price: '',
-};
-let browser;
-let page;
-function initPuppeteer() {
-    return __awaiter(this, void 0, void 0, function* () {
-        browser = yield puppeteer_1.default.launch({ headless: false, devtools: true });
-        page = yield browser.newPage();
-        yield page.goto('https://www.futunn.com/hk/stock/00700-HK');
-        page.on('response', (response) => {
-            const url = response.url().toString();
-            if (url.indexOf('/get-stock-info') === -1)
-                return;
-            void response.text().then((text) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const data = JSON.parse(text);
-                stockInfo.timeStamp = Date.now();
-                stockInfo.status = Number(data.data.change) === 0 ? 0 : (Number(data.data.change) > 0 ? 1 : -1);
-                stockInfo.price = data.data.price.substring(0, 5);
-            });
-        });
-    });
-}
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+const superagent_1 = __importDefault(require("superagent"));
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36';
 class StockAvatar {
+    constructor() {
+        this.csrfToken = '';
+        this.cookie = [];
+        this.timeStamp = 0;
+        this.stockInfo = { status: 0, price: '' };
+    }
+    getCookieAndCsrf() {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = yield superagent_1.default.get('https://www.futunn.com/hk/stock/00700-HK').set({
+                'User-Agent': UA
+            });
+            this.csrfToken = ((_a = res.text.match(/<meta\s?name="csrf-token"\s?content="([^"]+)"/)) === null || _a === void 0 ? void 0 : _a[1]) || '';
+            this.cookie = res.header['set-cookie'];
+        });
+    }
     getInfo() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!page)
-                yield initPuppeteer();
-            // 每60s更新一次价格
-            if (Date.now() - stockInfo.timeStamp > 1000 * 60) {
-                const refreshBtn = yield (page === null || page === void 0 ? void 0 : page.waitForSelector('.stock-refresh'));
-                void (refreshBtn === null || refreshBtn === void 0 ? void 0 : refreshBtn.click());
+            if (Date.now() - this.timeStamp < 1000 * 60)
+                return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price };
+            this.timeStamp = Date.now();
+            if (!this.cookie || !this.csrfToken)
+                yield this.getCookieAndCsrf();
+            const res = yield superagent_1.default.get('https://www.futunn.com/quote-api/get-stock-info?stock_id=54047868453564&market_type=1&market_code=1&instrument_type=3&lot_size=100').set({
+                'User-Agent': UA,
+                'futu-x-csrf-token': this.csrfToken,
+                'Cookie': this.cookie.join(';')
+            });
+            if (!res.ok) {
+                this.csrfToken = '';
+                this.cookie = [];
+                this.stockInfo.price = '';
+                this.stockInfo.status = 0;
             }
-            return { stockStatus: stockInfo.status, stockData: stockInfo.price };
+            else {
+                const data = JSON.parse(res.text);
+                this.stockInfo.price = data.data.price.substring(0, 5);
+                const change = Number(data.data.change);
+                if (change === 0) {
+                    this.stockInfo.status = 0;
+                }
+                else if (change > 0) {
+                    this.stockInfo.status = 1;
+                }
+                else {
+                    this.stockInfo.status = -1;
+                }
+            }
+            return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price };
         });
     }
 }
