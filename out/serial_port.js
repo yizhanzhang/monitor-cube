@@ -52,7 +52,6 @@ class MySerialPort {
             const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
             const { downloadData, uploadData } = yield net_info_avatar_1.default.getInfo();
             const { stockStatus, stockData } = yield stock_avatar_1.default.getInfo();
-            console.log({ stockStatus, stockData });
             const result = {
                 cpuData,
                 memData,
