@@ -33,7 +33,7 @@ class StockAvatar {
       this.stockInfo.price = ''
       this.stockInfo.status = 0
     } else {
-      const data = JSON.parse(res.text as string);
+      const data = JSON.parse(res.text);
       this.stockInfo.price = data.data.price.substring(0, 5);
       const change = Number(data.data.change);
       if (change === 0) {
