@@ -20,7 +20,7 @@ class MySerialPort {
     const pList: PortInfo[] = await SerialPort.list()
     const targetPort = pList.find(item => item.vendorId === CH340_DEVICE.vendorId && item.productId === CH340_DEVICE.productId)
     if (!targetPort) {
-      redLog('find no targetPort for CH340')
+      redLog('find no target port for CH340')
       return false
     }
 

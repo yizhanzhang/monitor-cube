@@ -32,7 +32,7 @@ class MySerialPort {
             const pList = yield serialport_1.SerialPort.list();
             const targetPort = pList.find(item => item.vendorId === CH340_DEVICE.vendorId && item.productId === CH340_DEVICE.productId);
             if (!targetPort) {
-                (0, log_1.redLog)('find no targetPort for CH340');
+                (0, log_1.redLog)('find no target port for CH340');
                 return false;
             }
             this.port = new serialport_1.SerialPort({ path: targetPort.path, baudRate: BAUD_RATE });
