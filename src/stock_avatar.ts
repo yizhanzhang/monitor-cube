@@ -23,7 +23,7 @@ class StockAvatar {
   }
 
   async getInfo() {
-    if (Date.now() - this.timeStamp < 1000 * 60) return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price }
+    if (Date.now() - this.timeStamp < 1000 * 60) return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price, stockName: config.name }
   
     this.timeStamp = Date.now()
     if (!this.cookie || !this.csrfToken) await this.getCookieAndCsrf();

@@ -39,7 +39,7 @@ class StockAvatar {
     getInfo() {
         return __awaiter(this, void 0, void 0, function* () {
             if (Date.now() - this.timeStamp < 1000 * 60)
-                return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price };
+                return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price, stockName: config.name };
             this.timeStamp = Date.now();
             if (!this.cookie || !this.csrfToken)
                 yield this.getCookieAndCsrf();
