@@ -3,6 +3,11 @@ import request from 'superagent';
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36';
 
+const config = {
+  id: 54047868453564,
+  name: "TENCENT"
+}
+
 class StockAvatar {
   private csrfToken = ''
   private cookie: Array<string> = []
@@ -22,7 +27,7 @@ class StockAvatar {
   
     this.timeStamp = Date.now()
     if (!this.cookie || !this.csrfToken) await this.getCookieAndCsrf();
-    const res = await request.get('https://www.futunn.com/quote-api/get-stock-info?stock_id=54047868453564&market_type=1&market_code=1&instrument_type=3&lot_size=100').set({
+    const res = await request.get(`https://www.futunn.com/quote-api/get-stock-info?stock_id=${config.id}&market_type=1&market_code=1&instrument_type=3&lot_size=100`).set({
       'User-Agent': UA,
       'futu-x-csrf-token': this.csrfToken,
       'Cookie': this.cookie.join(';')
@@ -41,10 +46,10 @@ class StockAvatar {
       } else if (change > 0) {
         this.stockInfo.status = 1
       } else {
-        this.stockInfo.status = -1
+        this.stockInfo.status = 2
       }
     }
-    return { stockStatus: this.stockInfo.status, stockData: this.stockInfo.price }
+    return { stockStatus: this.stockInfo.status, stockName: config.name, stockData: this.stockInfo.price }
   }
 }
 

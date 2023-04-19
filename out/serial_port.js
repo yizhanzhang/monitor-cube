@@ -51,13 +51,14 @@ class MySerialPort {
             const memInfo = yield node_os_utils_1.mem.info();
             const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100);
             const { downloadData, uploadData } = yield net_info_avatar_1.default.getInfo();
-            const { stockStatus, stockData } = yield stock_avatar_1.default.getInfo();
+            const { stockStatus, stockData, stockName } = yield stock_avatar_1.default.getInfo();
             const result = {
                 cpuData,
                 memData,
                 downloadData,
                 uploadData,
                 stockStatus,
+                stockName,
                 stockData,
             };
             this.port.write(JSON.stringify(result));

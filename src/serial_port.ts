@@ -39,13 +39,14 @@ class MySerialPort {
     const memInfo = await mem.info()
     const memData = Math.round(memInfo.usedMemMb / memInfo.totalMemMb * 100)
     const { downloadData, uploadData } = await netInfoAvatar.getInfo()
-    const { stockStatus, stockData } = await stockAvatar.getInfo()
+    const { stockStatus, stockData, stockName } = await stockAvatar.getInfo()
     const result = {
       cpuData,
       memData,
       downloadData,
       uploadData,
       stockStatus,
+      stockName,
       stockData,
     }
 
